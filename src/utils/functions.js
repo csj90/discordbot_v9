@@ -7,7 +7,7 @@ module.exports = {
 		if (!player) return member.guild.translate('misc:NO_QUEUE');
 
 		// Check that user is in the same voice channel
-		if (member.voice?.channel?.id !== player.voiceChannel) return member.guild.translate('misc:NOT_VOICE');
+		if (member.voice?.channel?.id !== player.voiceChannelid) return member.guild.translate('misc:NOT_VOICE');
 
 		// Check if the member has role to interact with music plugin
 		if (member.guild.roles.cache.get(member.guild.settings.MusicDJRole)) {
