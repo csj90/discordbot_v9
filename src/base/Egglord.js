@@ -4,8 +4,8 @@ const { ActivityType, Client, Collection, GatewayIntentBits: FLAGS, Partials, Pe
 	GiveawaysManager = require('./Giveaway-Manager'),
 	path = require('path'),
 	{ promisify } = require('util'),
-	AudioManager = require('./Audio-Manager'),
 	{ get } = require('axios'),
+	AudioManager = require('./Audio-Manager'),
 	readdir = promisify(require('fs').readdir);
 
 /**
@@ -14,28 +14,31 @@ const { ActivityType, Client, Collection, GatewayIntentBits: FLAGS, Partials, Pe
 */
 
 class Egglord extends Client {
-	constructor() {
-		super({
-			partials: [Partials.GuildMember, Partials.User, Partials.Message, Partials.Channel, Partials.Reaction, Partials.GuildScheduledEvent],
-			intents: [FLAGS.Guilds, FLAGS.GuildMembers, FLAGS.GuildModeration, FLAGS.GuildEmojisAndStickers,
-				FLAGS.GuildMessages, FLAGS.GuildMessageReactions, FLAGS.DirectMessages, FLAGS.GuildVoiceStates, FLAGS.GuildInvites,
-				FLAGS.GuildScheduledEvents, FLAGS.MessageContent, FLAGS.GuildPresences],
-			presence: {
-				status: 'online',
-				activities: [{
-					name: 'CSJGAMING.com V8.0',
-					type: ActivityType.Listening,
-					url: 'https://www.twitch.tv/csj90',
-				}],
-			},
-		});
+    constructor() {
+        super({
+            partials: [Partials.GuildMember, Partials.User, Partials.Message, Partials.Channel, Partials.Reaction, Partials.GuildScheduledEvent],
+            intents: [
+                FLAGS.Guilds, FLAGS.GuildMembers, FLAGS.GuildModeration, FLAGS.GuildEmojisAndStickers,
+                FLAGS.GuildMessages, FLAGS.GuildMessageReactions, FLAGS.DirectMessages, FLAGS.GuildVoiceStates,
+                FLAGS.GuildInvites, FLAGS.GuildScheduledEvents, FLAGS.MessageContent, FLAGS.GuildPresences
+            ],
+            presence: {
+                status: 'online',
+                activities: [{
+                    name: 'CSJGAMING.com V9.0',
+                    type: ActivityType.Listening,
+                    url: 'https://www.twitch.tv/csj90',
+                }],
+            },
+        });
 
 		/**
- 		 * The logger file
- 	 	 * @type {function}
- 	  */
+		 * The logger file
+		 * @type {function}
+		*/
 		this.logger = require('../utils/Logger');
 
+		this.manager = new AudioManager(this);
 		/**
 		 * The Giveaway manager
 		 * @type {GiveawaysManager}
@@ -71,6 +74,7 @@ class Egglord extends Client {
 		*/
 		this.aliases = new Collection();
 		this.commands = new Collection();
+		this.subCommands = new Collection();
 		this.interactions = new Collection();
 		this.cooldowns = new Collection();
 		this.requests = {};
@@ -133,12 +137,6 @@ class Egglord extends Client {
 		 * @type {function}
 		*/
 		this.delay = ms => new Promise(res => setTimeout(res, ms));
-
-		/**
-		 * The Audio manager
-		 * @type {Class}
-		*/
-		this.manager = new AudioManager(this);
 	}
 
 	/**
@@ -266,15 +264,6 @@ class Egglord extends Client {
 	*/
 	addEmbed(channelID, embed) {
 		this.embedCollection.set(channelID, [this.embedCollection.has(channelID) ? [...this.embedCollection.get(channelID), embed].flat() : embed]);
-
-		// collect embeds
-		/*
-		if (!this.embedCollection.has(channelID)) {
-			this.embedCollection.set(channelID, [embed]);
-		} else {
-			this.embedCollection.set(channelID, [...this.embedCollection.get(channelID), embed]);
-		}
-		*/
 	}
 
 	/**
@@ -284,21 +273,29 @@ class Egglord extends Client {
 	*/
 	async fetch(endpoint, query = {}) {
 		try {
-			if (endpoint.startsWith('image')) {
-				const { data } = await get(`https://api2.csjgaming.com/api/${endpoint}?${new URLSearchParams(query)}`, {
+			if (endpoint.startsWith('image') || endpoint == 'misc/qrcode') {
+				const { data } = await get(`https://api.csjgaming.com/api/${endpoint}?${new URLSearchParams(query)}`, {
 					headers: { 'Authorization': this.config.api_keys.masterToken },
 					responseType: 'arraybuffer',
 				});
 				return data;
 			} else {
-				const { data: { data: res } } = await get(`https://api2.csjgaming.com/api/${endpoint}?${new URLSearchParams(query)}`, {
+				const { data } = await get(`https://api.csjgaming.com/api/${endpoint}?${new URLSearchParams(query)}`, {
 					headers: { 'Authorization': this.config.api_keys.masterToken },
 				});
-				return res;
+
+				// Check if error or not
+				if (data.error) {
+					return { error: data.error };
+				} else {
+					return data.data;
+				}
+
 			}
 		} catch (err) {
-			this.logger.error(err.response.data.error);
-			return err.response.data;
+			const error = err.response?.data.error ?? 'API website currently down';
+			this.logger.error(error);
+			return { error: error };
 		}
 	}
 }
