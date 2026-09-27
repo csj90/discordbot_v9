@@ -8,4 +8,5 @@ module.exports = {
 	timeEventSchema: require('./TimedEvents'),
 	TagsSchema: require('./tag'),
 	userSchema: require('./userSettings.js'),
+	SessionSchema: require('./Session'),
 };

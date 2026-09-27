@@ -24,6 +24,8 @@ const guildSchema = Schema({
 	LevelIgnoreRoles: { type: Array },
 	LevelIgnoreChannel: { type: Array },
 	LevelMultiplier: { type: Number, default: 1 },
+	// Show the leaderboard on the website
+	LevelPublicBoard: { type: Boolean, default: true },
 	LevelRoleRewards: { type: Array },
 	// Music plugin
 	MusicDJ: { type: Boolean, default: false },

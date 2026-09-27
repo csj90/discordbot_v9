@@ -38,8 +38,21 @@ const config = {
 	},
 	API: {
 		port: 3000,
+		// Token for the legacy server-to-server routes (/statistics, /guilds, /logs, ...)
 		secure: true,
 		token: '123456789',
+		// Public URL of this API. Add `${publicURL}/v1/auth/callback` as a redirect in the Discord developer portal
+		publicURL: 'http://localhost:3000',
+		// Where the dashboard lives, users are sent here after logging in
+		dashboardURL: 'http://localhost:3031',
+		// Browser origins allowed to call the dashboard API
+		corsOrigins: ['http://localhost:3031'],
+		// Share the session cookie between API and dashboard subdomains (e.g. '.example.com'), leave empty for localhost
+		cookieDomain: '',
+		// OAuth2 client secret from the Discord developer portal
+		clientSecret: 'client-secret',
+		// Express 'trust proxy' setting, use 1 when running behind a single reverse proxy
+		trustProxy: false,
 	},
 	LavalinkNodes: [
 		{ host: 'localhost', port: 5000, password: 'youshallnotpass' },

@@ -1,45 +1,37 @@
 const express = require('express'),
-	app = express(),
 	{ API } = require('../config'),
 	{ promisify } = require('util'),
 	readdir = promisify(require('fs').readdir),
-	bodyParser = require('body-parser'),
-	cors = require('cors');
+	{ requireInternalToken } = require('./lib/middleware');
+
+// Routes that check their own per-guild API key instead of the internal token
+const SELF_AUTHED = ['players'];
 
 module.exports = async bot => {
-	const routes = (await readdir('./src/http/routes')).filter((v, i, a) => a.indexOf(v) === i),
+	const app = express(),
+		routes = (await readdir('./src/http/routes')).filter((v, i, a) => a.indexOf(v) === i),
 		endpoints = [];
 
-    app.use(bodyParser.json())
+	app
+		.disable('x-powered-by')
+		.set('trust proxy', API.trustProxy ?? false);
 
-	// IP logger
-	app.use(function(req, res, next) {
-		if (req.originalUrl !== '/favicon.ico' || bot.config.debug) {
-			//bot.logger.log(`IP: ${req.connection.remoteAddress.slice(7)} -> ${req.originalUrl}`);
-		}
-		next();
-	});
+	// Dashboard API (session cookies, CORS for the website)
+	app.use('/v1', require('./v1')(bot));
 
-	// Token system
-	app.use((req, res, next) => {
-		if (API.secure && API.token !== req.query.token) {
-			return res.json({ error: 'Invalid API token' });
-		}
-		next();
-	});
-
-	// Get all routes
+	// Legacy server-to-server routes
+	app.use(express.json());
 	for (const route of routes) {
-		if (route !== 'index.js') {
-			app.use(`/${route.replace('.js', '')}`, require(`./routes/${route}`)(bot));
-			endpoints.push(`${route.replace('.js', '')}:`, ...(require(`./routes/${route}`)(bot).stack.map(item => `\t ${item.route.path}`).filter((v, i, a) => a.indexOf(v) === i && v !== '/')));
-		}
+		if (route === 'index.js') continue;
+		const name = route.replace('.js', ''),
+			router = require(`./routes/${route}`)(bot);
+		if (SELF_AUTHED.includes(name)) app.use(`/${name}`, router);
+		else app.use(`/${name}`, requireInternalToken, router);
+		endpoints.push(`${name}:`, ...(router.stack.map(item => `\t ${item.route.path}`).filter((v, i, a) => a.indexOf(v) === i && v !== '/')));
 	}
 
 	// Create web server
 	app
-		.use(cors())
-		.disable('x-powered-by')
 		.get('/', (req, res) => {
 			res
 				.type('text/plain')
