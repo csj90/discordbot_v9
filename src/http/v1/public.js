@@ -45,8 +45,9 @@ module.exports = (bot) => {
 			memory: { heapUsed: memory.heapUsed, heapTotal: memory.heapTotal, rss: memory.rss },
 			commandsUsed: bot.commandsUsed,
 			messagesSeen: bot.messagesSent,
-			nodes: [...(bot.manager?.nodes?.values() ?? [])].map((node) => ({
-				name: node.options.identifier ?? node.options.host,
+			// Public endpoint: never expose Lavalink hostnames or IPs, number the nodes instead
+			nodes: [...(bot.manager?.nodes?.values() ?? [])].map((node, i) => ({
+				name: `node-${i + 1}`,
 				connected: node.connected,
 				players: node.stats?.players ?? 0,
 				playingPlayers: node.stats?.playingPlayers ?? 0,
