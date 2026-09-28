@@ -18,4 +18,5 @@ const sessionSchema = Schema({
 // Let MongoDB remove expired sessions
 sessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-module.exports = model('Session', sessionSchema);
+// Own collection: "sessions" already exists in some databases (NextAuth) with a unique sessionToken index
+module.exports = model('DashboardSession', sessionSchema, 'dashboard_sessions');
