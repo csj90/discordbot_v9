@@ -52,6 +52,8 @@ const config = {
 		cookieDomain: '',
 		// OAuth2 client secret from the Discord developer portal
 		clientSecret: 'client-secret',
+		// Optional: the application ID the secret belongs to (defaults to the bot's application ID)
+		clientID: '',
 		// Express 'trust proxy' setting, use 1 when running behind a single reverse proxy
 		trustProxy: false,
 	},
