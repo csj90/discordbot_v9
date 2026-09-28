@@ -44,6 +44,8 @@ function requireGuild(bot) {
 
 // Server-to-server routes, token in the Authorization header (or ?token= for older clients)
 function requireInternalToken(req, res, next) {
+	// secure: false turns the check off (testing only, these routes expose logs and member lists)
+	if (!API.secure) return next();
 	const token = req.get('authorization')?.replace(/^Bearer /, '') ?? req.query.token;
 	if (!API.token || !safeEqual(token, API.token)) return res.status(401).json({ error: 'Invalid API token' });
 	next();
