@@ -4,7 +4,8 @@ const axios = require('axios'),
 
 const DISCORD_API = 'https://discord.com/api/v10';
 
-const clientID = (bot) => bot.application?.id ?? bot.user.id;
+// API.clientID overrides the application ID the bot reports (they must match API.clientSecret)
+const clientID = (bot) => String(API.clientID || bot.application?.id || bot.user.id).trim();
 const redirectURI = () => `${API.publicURL}/v1/auth/callback`;
 
 function authorizeURL(bot, state) {
@@ -22,7 +23,7 @@ function authorizeURL(bot, state) {
 async function exchangeCode(bot, code) {
 	const { data } = await axios.post(`${DISCORD_API}/oauth2/token`, new URLSearchParams({
 		client_id: clientID(bot),
-		client_secret: API.clientSecret,
+		client_secret: String(API.clientSecret ?? '').trim(),
 		grant_type: 'authorization_code',
 		code,
 		redirect_uri: redirectURI(),
@@ -57,4 +58,4 @@ function inviteURL(bot, guildID) {
 	return `https://discord.com/oauth2/authorize?${params}`;
 }
 
-module.exports = { authorizeURL, exchangeCode, fetchUser, fetchUserGuilds, inviteURL };
+module.exports = { clientID, authorizeURL, exchangeCode, fetchUser, fetchUserGuilds, inviteURL };
