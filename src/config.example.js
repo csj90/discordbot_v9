@@ -37,16 +37,17 @@ const config = {
 		rateLimitChannelID: '761612724370931722',
 	},
 	API: {
-		port: 3000,
-		// Token for the legacy server-to-server routes (/statistics, /guilds, /logs, ...)
+		port: 3001,
+		// Require `token` on the legacy server-to-server routes (/statistics, /guilds, /logs, ...).
+		// The website doesn't use these, it uses /v1. Only set false while testing.
 		secure: true,
 		token: '123456789',
 		// Public URL of this API. Add `${publicURL}/v1/auth/callback` as a redirect in the Discord developer portal
-		publicURL: 'http://localhost:3000',
+		publicURL: 'http://localhost:3001',
 		// Where the dashboard lives, users are sent here after logging in
-		dashboardURL: 'http://localhost:3031',
+		dashboardURL: 'http://localhost:3000',
 		// Browser origins allowed to call the dashboard API
-		corsOrigins: ['http://localhost:3031'],
+		corsOrigins: ['http://localhost:3000'],
 		// Share the session cookie between API and dashboard subdomains (e.g. '.example.com'), leave empty for localhost
 		cookieDomain: '',
 		// OAuth2 client secret from the Discord developer portal
