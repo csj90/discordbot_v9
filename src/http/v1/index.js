@@ -1,14 +1,13 @@
 // Dependencies
 const express = require('express'),
 	cors = require('cors'),
-	{ API } = require('../../config'),
-	{ checkOrigin, errorHandler } = require('../lib/middleware');
+	{ checkOrigin, corsOrigin, errorHandler } = require('../lib/middleware');
 
 // Dashboard API, the website talks to the bot only through here
 module.exports = (bot) => {
 	const router = express.Router();
 
-	router.use(cors({ origin: API.corsOrigins ?? [], credentials: true }));
+	router.use(cors({ origin: corsOrigin, credentials: true }));
 	router.use(checkOrigin);
 	router.use(express.json({ limit: '100kb' }));
 

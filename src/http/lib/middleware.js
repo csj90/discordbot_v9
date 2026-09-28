@@ -55,9 +55,34 @@ function requireInternalToken(req, res, next) {
 function checkOrigin(req, res, next) {
 	if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
 	const origin = req.get('origin');
-	if (origin && !(API.corsOrigins ?? []).includes(origin)) return res.status(403).json({ error: 'Origin not allowed' });
+	if (origin && !isAllowedOrigin(origin)) return res.status(403).json({ error: 'Origin not allowed' });
 	next();
 }
+
+// "https://Bot.example.com/dashboard/" -> "https://bot.example.com", browsers send origins in that form
+function toOrigin(value) {
+	try {
+		return new URL(String(value).trim()).origin;
+	} catch {
+		return null;
+	}
+}
+
+// corsOrigins plus the dashboard itself, so a missing entry can't lock the website out
+const ALLOWED_ORIGINS = new Set([...(API.corsOrigins ?? []), API.dashboardURL].map(toOrigin).filter(Boolean));
+const warned = new Set();
+
+function isAllowedOrigin(origin) {
+	if (ALLOWED_ORIGINS.has(toOrigin(origin))) return true;
+	if (!warned.has(origin) && warned.size < 50) {
+		warned.add(origin);
+		console.warn(`[API] Blocked request from origin "${origin}". Allowed: ${[...ALLOWED_ORIGINS].join(', ') || '(none)'}. Add it to API.corsOrigins if it's yours.`);
+	}
+	return false;
+}
+
+// For the cors() middleware
+const corsOrigin = (origin, callback) => callback(null, !origin || isAllowedOrigin(origin));
 
 // Fixed-window rate limiter, keyed by IP unless a key function is given
 function rateLimit({ windowMs, max, key = (req) => req.ip }) {
@@ -91,4 +116,4 @@ function errorHandler(bot) {
 	};
 }
 
-module.exports = { wrap, isOwner, canManageGuild, requireSession, requireGuild, requireInternalToken, checkOrigin, rateLimit, errorHandler };
+module.exports = { wrap, isOwner, canManageGuild, requireSession, requireGuild, requireInternalToken, checkOrigin, corsOrigin, rateLimit, errorHandler };
